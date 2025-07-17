@@ -16,8 +16,11 @@ const questrial = Questrial({
 });
 
 export const metadata: Metadata = {
-  title: "Fresh Harvests",
-  description: "Fresh Fruits and Vegetables Marketplace",
+  title: "Fresh Harvest - Fresh Fruits and Vegetables",
+  description:
+    "At Fresh Harvest, we are passionate about providing you with the freshest and most flavorful fruits and vegetables",
+  keywords: "fresh fruits, vegetables, organic, healthy food, fresh harvest",
+  authors: [{ name: "Fresh Harvest" }],
 };
 
 export default function RootLayout({
