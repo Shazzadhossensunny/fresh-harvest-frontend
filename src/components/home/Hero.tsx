@@ -1,28 +1,45 @@
+// components/home/Hero.tsx
 import React from "react";
 import Image from "next/image";
 
 const HeroSection = () => {
   return (
-    <section className="relative overflow-hidden min-h-screen">
-      {/* Split Background Design */}
-      <div className="absolute inset-0">
+    <section className="relative overflow-hidden min-h-[90vh]">
+      {/* Split Background Design - Extended to top of header */}
+      <div className="absolute inset-0 flex">
         {/* Left side - White background */}
-        <div className="absolute inset-0 lg:w-2/3 w-full bg-white" />
+        <div className="w-full lg:w-2/3 bg-gradient-to-r from-gray-50 to-white" />
 
         {/* Right side - Food background with green overlay */}
-        <div className="absolute inset-0 lg:left-4/5 left-0 lg:w-1/3 ml-auto w-full lg:block hidden">
-          <Image
-            src="/images/food.jpg"
-            alt="Fresh vegetables background"
-            fill
-            className="object-cover"
-            priority
-          />
-          {/* Green overlay */}
-          <div
-            className="absolute inset-0 bg-green/80"
-            style={{ backgroundColor: "rgba(116, 155, 63, .95)" }}
-          />
+        <div className="hidden lg:block w-1/3 relative">
+          <div className="absolute inset-0">
+            <Image
+              src="/images/food.jpg"
+              alt="Fresh vegetables background"
+              fill
+              className="object-cover"
+              priority
+            />
+            {/* Green overlay - extends to top of page */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(116, 155, 63, 0.95)" }}
+            />
+          </div>
+
+          {/* Girl with Vegetables positioned at bottom right */}
+          <div className="absolute bottom-0 right-0 w-full h-[85%]">
+            <div className="relative w-full h-full">
+              <Image
+                src="/images/girl.png"
+                alt="Girl with fresh vegetables"
+                fill
+                className="object-contain object-right-bottom"
+                priority
+                style={{ right: "0" }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -46,25 +63,26 @@ const HeroSection = () => {
         />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end min-h-[80vh]">
+      {/* Container with same padding as header */}
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-20 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end min-h-[70vh]">
           {/* Left Content */}
           <div className="space-y-8 lg:pb-20">
-            <div className="space-y-4">
-              <p className="text-green font-body text-lg font-medium">
+            <div className="space-y-4 mb-8">
+              <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
                 Welcome to Fresh Harvest
-              </p>
-              <h1 className="font-heading text-h1 text-black leading-tight">
+              </h6>
+              <h1 className="font-heading font-medium text-4xl md:text-5xl lg:text-6xl xl:text-[80px] text-black leading-tight">
                 Fresh Fruits and Vegetables
               </h1>
-              <p className="text-grey100 font-body text-body max-w-md">
+              <p className="text-grey100 font-body text-sm max-w-md">
                 At Fresh Harvests, we are passionate about providing you with
                 the freshest and most flavorful fruits and vegetables
               </p>
             </div>
 
             {/* CTA Button */}
-            <button className="bg-primary text-white px-8 py-4 rounded-lg font-body text-lg font-medium hover:bg-primary/90 transition-colors">
+            <button className="bg-primary text-white px-8 py-4 rounded-lg font-heading text-lg font-semibold hover:bg-primary/90 transition-colors">
               Shop Now
             </button>
 
@@ -93,7 +111,7 @@ const HeroSection = () => {
 
             {/* App Download Section */}
             <div className="mt-12">
-              <p className="text-black font-body text-base mb-4">
+              <p className="text-grey100 font-body text-sm mb-4">
                 Download App:
               </p>
               <div className="flex gap-4">
@@ -112,20 +130,6 @@ const HeroSection = () => {
                   className="cursor-pointer hover:opacity-90 transition-opacity"
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Right Content - Girl with Vegetables positioned at bottom */}
-          <div className="relative flex justify-center lg:justify-end items-end">
-            <div className="relative">
-              <Image
-                src="/images/girl.png"
-                alt="Girl with fresh vegetables"
-                width={600}
-                height={700}
-                className="object-contain object-bottom"
-                priority
-              />
             </div>
           </div>
         </div>

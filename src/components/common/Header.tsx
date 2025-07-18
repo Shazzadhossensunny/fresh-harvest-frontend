@@ -8,7 +8,7 @@ import Image from "next/image";
 import LogoImg from "../../../public/images/logo.png";
 import AuthModals from "../AuthModals";
 
-const Header: React.FC = () => {
+const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authType, setAuthType] = useState<"login" | "register">("login");
@@ -39,7 +39,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="relative z-50 bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
@@ -148,7 +148,7 @@ const Header: React.FC = () => {
 
               <button className="flex items-center w-full text-grey100 hover:text-green px-3 py-2 text-sm font-medium transition-colors duration-200">
                 <Heart className="w-4 h-4 mr-2" />
-                Favorites 1
+                Favorites 4
               </button>
 
               <button className="flex items-center w-full text-grey100 hover:text-green px-3 py-2 text-sm font-medium transition-colors duration-200">
