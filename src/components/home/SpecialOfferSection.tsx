@@ -1,11 +1,9 @@
-// components/SpecialOfferSection.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 const SpecialOfferSection = () => {
-  const [revealed, setRevealed] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -40,111 +38,125 @@ const SpecialOfferSection = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const revealCode = () => {
-    setRevealed(true);
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText("FRESH28");
-    alert("Coupon code copied to clipboard!");
-  };
-
   return (
-    <section className="py-16 bg-gradient-to-r from-primary to-green">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          {/* Image Column */}
-          <div className="flex-1 relative">
-            <div className="relative aspect-square w-full rounded-3xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-green/20 to-primary/30 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="inline-block bg-white/80 p-10 rounded-full mb-6">
-                    <div className="w-24 h-24 bg-green/20 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-16 h-16 text-green"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22C6.66,19.09 8.14,15.83 12,15C9.33,13.33 10,7 10,7C17,7 20,13 18,16C16,19 13,19 12,19C16,19 19,16 20,14C21,12 21,11 17,8Z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="text-4xl font-heading font-medium text-black">
-                    Seasonal Fruit Bundle
-                  </h3>
-                </div>
-              </div>
-            </div>
+    <section className="relative py-10 lg:py-20 bg-[#FFFFFF54] overflow-hidden">
+      {/* Background Patterns */}
+      <Image
+        src="/images/offer_bg.png"
+        alt="Background left"
+        width={500}
+        height={500}
+        className="absolute bottom-0 left-0 w-64 lg:w-[400px] opacity-10"
+      />
+      <Image
+        src="/images/offer_bg.png"
+        alt="Background right"
+        width={500}
+        height={500}
+        className="absolute top-0 right-0  w-64 lg:w-[400px] opacity-10 rotate-180"
+      />
 
-            {/* Decorative elements */}
-            <div className="absolute -top-6 -left-6 w-24 h-24 bg-white/10 rounded-full z-0"></div>
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full z-0"></div>
-          </div>
+      {/* Green shape */}
+      <div className="absolute -left-20 -bottom-10 rotate-[75deg] w-24 h-24 lg:w-32 lg:h-32 xl:w-48 xl:h-48 z-10">
+        <svg
+          viewBox="0 0 200 200"
+          className="w-full h-full"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0 200C0 89.543 89.543 0 200 0V200H0Z"
+            fill="url(#greenGradient)"
+            opacity="0.8"
+          />
+          <defs>
+            <linearGradient
+              id="greenGradient"
+              x1="0"
+              y1="0"
+              x2="200"
+              y2="200"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#8BC34A" />
+              <stop offset="100%" stopColor="#4CAF50" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
-          {/* Content Column */}
-          <div className="flex-1 text-center lg:text-left">
-            <h2 className="text-3xl font-heading font-medium text-white mb-4">
+      {/* Decorative Leaves */}
+      <Image
+        src="/images/leaf.png"
+        alt="Leaf top right"
+        width={80}
+        height={80}
+        className="absolute top-8 right-1/4 lg:top-10 lg:right-1/3 rotate-[-90deg] z-10"
+      />
+      <Image
+        src="/images/leaf-half.png"
+        alt="Leaf bottom right"
+        width={80}
+        height={80}
+        className="absolute bottom-5 right-2 lg:right-4 z-10"
+      />
+
+      <div className="container mx-auto px-4 relative z-20">
+        <div className="flex flex-col lg:flex-row items-center gap-10">
+          {/* Left Content */}
+          <div className="flex-1 text-center lg:text-left order-2 lg:order-1 space-y-4">
+            <span className="text-green bg-[#749B3F1A] text-sm lg:text-lg px-3 py-1 rounded font-medium inline-block font-heading">
               Special Offer
-            </h2>
-            <h1 className="text-5xl font-heading font-medium text-white mb-6">
+            </span>
+            <h2 className="text-black font-heading text-3xl md:text-4xl lg:text-5xl xl:text-[80px] font-medium leading-tight">
               Seasonal Fruit Bundle
-            </h1>
-            <p className="text-2xl text-white/90 mb-10">
-              Discount up to <span className="font-bold">80% OFF</span>
-            </p>
+            </h2>
+            <h3 className="text-lg lg:text-xl xl:text-5xl text-black font-medium">
+              Discount up to <span className="text-primary">80% OFF</span>
+            </h3>
 
-            {/* Countdown Timer */}
-            <div className="flex justify-center lg:justify-start gap-4 mb-12">
+            {/* Timer */}
+            <div className="flex justify-center lg:justify-start gap-3">
               {[
-                { value: timeLeft.days, label: "Days" },
-                { value: timeLeft.hours, label: "Hour" },
-                { value: timeLeft.minutes, label: "Min" },
-                { value: timeLeft.seconds, label: "Second" },
+                { label: "Days", value: timeLeft.days },
+                { label: "Hour", value: timeLeft.hours },
+                { label: "Min", value: timeLeft.minutes },
+                { label: "Second", value: timeLeft.seconds },
               ].map((item, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="bg-white/20 w-20 h-20 rounded-xl flex items-center justify-center mb-2">
-                    <span className="text-3xl font-bold text-white">
-                      {item.value.toString().padStart(2, "0")}
-                    </span>
-                  </div>
-                  <span className="text-white/80">{item.label}</span>
+                <div
+                  key={index}
+                  className="bg-white shadow w-16 h-20 md:w-20 md:h-24 lg:w-24 lg:h-28 rounded-lg flex flex-col items-center justify-center"
+                >
+                  <span className="text-black text-xl lg:text-3xl font-heading">
+                    {item.value.toString().padStart(2, "0")}
+                  </span>
+                  <span className="text-grey100 text-sm lg:text-lg font-normal">
+                    {item.label}
+                  </span>
                 </div>
               ))}
             </div>
 
-            {/* Coupon Code Section */}
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 max-w-md mx-auto lg:mx-0">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                {revealed ? (
-                  <>
-                    <div className="flex items-center">
-                      <span className="text-white text-xl font-medium">
-                        CODE:
-                      </span>
-                      <span className="ml-2 text-white text-2xl font-bold tracking-widest">
-                        FRESH28
-                      </span>
-                    </div>
-                    <button
-                      onClick={copyToClipboard}
-                      className="bg-white hover:bg-white/90 text-green px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-                    >
-                      Copy Code
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-white text-xl font-medium">
-                      HIDDEN COUPON CODE
-                    </span>
-                    <button
-                      onClick={revealCode}
-                      className="bg-white hover:bg-white/90 text-green px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-                    >
-                      Reveal Code
-                    </button>
-                  </>
-                )}
+            {/* Code */}
+            <div className="pt-6">
+              <div className="inline-flex items-center gap-2 bg-[#176D38] px-6 py-3 lg:px-9 lg:py-4 rounded-full font-heading text-white text-lg lg:text-2xl cursor-pointer">
+                <span>CODE:</span>
+                <span className="text-[#FAC714]">FRESH28</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Content - Fruit Image */}
+          <div className="flex-1 order-1 lg:order-2">
+            <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
+              <div className="relative w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96">
+                <Image
+                  src="/images/fruits.png"
+                  alt="Fruits"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
             </div>
           </div>

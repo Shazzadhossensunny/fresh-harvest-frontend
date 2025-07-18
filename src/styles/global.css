@@ -52,3 +52,25 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #5a7a30;
 }
+
+/* globals.css */
+
+.testimonial-swiper .swiper-pagination {
+  position: relative;
+  margin-top: 2rem;
+}
+
+.testimonial-swiper .swiper-pagination-bullet {
+  background: #d1d5db;
+  opacity: 1;
+  width: 12px;
+  height: 12px;
+  margin: 0 4px;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+.testimonial-swiper .swiper-pagination-bullet-active {
+  background: #749b3f;
+  transform: scale(1.2);
+}
