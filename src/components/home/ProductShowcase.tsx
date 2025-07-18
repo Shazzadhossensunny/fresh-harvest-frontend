@@ -1,11 +1,14 @@
 "use client";
 
 import { useGetAllProductsQuery } from "@/redux/features/products/productApi";
+import { useGetAllCategoriesQuery } from "@/redux/features/category/categoryApi";
+import { addToCart } from "@/redux/features/cart/cartSlice"; // Import your cart action
+import { useAppDispatch } from "@/redux/hooks"; // Assuming you have typed hooks
+import { toast } from "sonner"; // Import Sonner
 
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useGetAllCategoriesQuery } from "@/redux/features/category/categoryApi";
 
 // Define TypeScript interfaces based on your database structure
 interface Product {
@@ -24,6 +27,7 @@ interface Product {
 interface Category {
   id: string;
   categoryName: string;
+  isDeleted?: boolean; // Add optional isDeleted property
   createdAt: string;
   updatedAt: string;
 }
@@ -40,8 +44,15 @@ interface CategoryResponse {
   data: Category[];
 }
 
+// Create a union type for category options
+type CategoryOption = {
+  id: string;
+  categoryName: string;
+};
+
 const ProductShowcase = () => {
   const [activeCategoryId, setActiveCategoryId] = useState<string>("All");
+  const dispatch = useAppDispatch();
 
   const { data: productsResponse, isLoading: productsLoading } =
     useGetAllProductsQuery() as {
@@ -50,7 +61,10 @@ const ProductShowcase = () => {
     };
 
   const { data: categoriesResponse, isLoading: categoriesLoading } =
-    useGetAllCategoriesQuery();
+    useGetAllCategoriesQuery() as {
+      data: CategoryResponse;
+      isLoading: boolean;
+    };
 
   // Get products and categories from API responses
   const allProducts = productsResponse?.data || [];
@@ -65,11 +79,41 @@ const ProductShowcase = () => {
             product.categoryId === activeCategoryId && !product.isDeleted
         );
 
-  // Create category options with "All" option
-  const categoryOptions = [
+  // Create category options with "All" option - Fix TypeScript issue
+  const categoryOptions: CategoryOption[] = [
     { id: "All", categoryName: "All" },
-    ...allCategories.filter((category) => !category.isDeleted),
+    ...allCategories
+      .filter((category) => !category.isDeleted)
+      .map((category) => ({
+        id: category.id,
+        categoryName: category.categoryName,
+      })),
   ];
+
+  // Handle add to cart functionality
+  const handleAddToCart = (product: Product) => {
+    if (product.stock === 0) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
+    const cartItem = {
+      id: product.id,
+      name: product.productName,
+      price: product.price,
+      quantity: 1,
+      stock: product.stock,
+      imageUrl: product.images[0] || undefined,
+    };
+
+    dispatch(addToCart(cartItem));
+
+    // Show success toast
+    toast.success(`${product.productName} added to cart!`, {
+      description: `$${product.price} • 1 item`,
+      duration: 3000,
+    });
+  };
 
   if (productsLoading || categoriesLoading) {
     return (
@@ -163,12 +207,15 @@ const ProductShowcase = () => {
                 <p className="text-grey100 text-lg mt-2">${product.price}</p>
                 <div className="flex flex-col gap-2 mt-3">
                   <button
-                    className="w-full py-3 rounded-lg font-heading text-lg font-normal transition-colors duration-200 bg-white text-black border border-grey80 hover:bg-primary hover:text-white hover:border-primary"
+                    className={`w-full py-3 rounded-lg font-heading text-lg font-normal transition-colors duration-200 ${
+                      product.stock === 0
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        : "bg-white text-black border border-grey80 hover:bg-primary hover:text-white hover:border-primary"
+                    }`}
                     disabled={product.stock === 0}
                     onClick={(e) => {
                       e.preventDefault();
-                      // Add to cart logic here
-                      console.log(`Added ${product.productName} to cart`);
+                      handleAddToCart(product);
                     }}
                   >
                     {product.stock === 0 ? "Out of Stock" : "Add to cart"}

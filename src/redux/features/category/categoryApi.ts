@@ -2,9 +2,7 @@ import { baseApi } from "@/redux/api/baseApi";
 
 interface Category {
   id: string;
-  name: string;
-  description?: string;
-  isDeleted: boolean;
+  categoryName: string;
   createdAt: string;
   updatedAt: string;
 }

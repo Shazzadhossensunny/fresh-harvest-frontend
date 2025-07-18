@@ -7,11 +7,15 @@ import { Heart, ShoppingCart, Menu, X } from "lucide-react";
 import Image from "next/image";
 import LogoImg from "../../../public/images/logo.png";
 import AuthModals from "../AuthModals";
+import { useAppSelector } from "@/redux/hooks"; // Import your typed hook
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authType, setAuthType] = useState<"login" | "register">("login");
+
+  // Get cart data from Redux store
+  const { totalQuantity, totalAmount } = useAppSelector((state) => state.cart);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -79,14 +83,59 @@ const Header = () => {
               </span>
             </button>
 
-            <button className="flex items-center text-grey100 hover:text-green p-2 transition-colors duration-200 relative">
+            <Link
+              href="/cart"
+              className="flex items-center text-grey100 hover:text-green p-2 transition-colors duration-200 relative group"
+            >
               <ShoppingCart className="w-5 h-5" />
               <span className="text-sm ml-1">Cart</span>
 
-              <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                0
-              </span>
-            </button>
+              {totalQuantity > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
+                  {totalQuantity > 99 ? "99+" : totalQuantity}
+                </span>
+              )}
+
+              {/* Cart Preview on Hover */}
+              {totalQuantity > 0 && (
+                <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-heading text-lg font-medium text-black">
+                        Shopping Cart
+                      </h3>
+                      <span className="text-sm text-grey100">
+                        {totalQuantity} {totalQuantity === 1 ? "item" : "items"}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-black">Total:</span>
+                        <span className="font-heading text-lg font-medium text-green">
+                          ${totalAmount.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        <Link
+                          href="/cart"
+                          className="block w-full bg-green text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-green/90 transition-colors duration-200 text-center"
+                        >
+                          View Cart
+                        </Link>
+                        <Link
+                          href="/checkout"
+                          className="block w-full bg-white text-green border border-green py-2 px-4 rounded-md text-sm font-medium hover:bg-green hover:text-white transition-colors duration-200 text-center"
+                        >
+                          Checkout
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Link>
 
             <button
               onClick={() => openAuthModal("login")}
@@ -151,10 +200,28 @@ const Header = () => {
                 Favorites 4
               </button>
 
-              <button className="flex items-center w-full text-grey100 hover:text-green px-3 py-2 text-sm font-medium transition-colors duration-200">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Cart 0
-              </button>
+              <Link
+                href="/cart"
+                className="flex items-center justify-between w-full text-grey100 hover:text-green px-3 py-2 text-sm font-medium transition-colors duration-200"
+                onClick={toggleMobileMenu}
+              >
+                <div className="flex items-center">
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Cart
+                </div>
+                <div className="flex items-center space-x-2">
+                  {totalQuantity > 0 && (
+                    <span className="bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {totalQuantity > 99 ? "99+" : totalQuantity}
+                    </span>
+                  )}
+                  {totalAmount > 0 && (
+                    <span className="text-xs text-green font-medium">
+                      ${totalAmount.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              </Link>
 
               <button
                 onClick={() => {
