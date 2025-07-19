@@ -196,7 +196,7 @@ const ProductShowcase = () => {
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = "/placeholder-product.jpg";
+                        target.src = "/images/placeholder-images.svg";
                       }}
                     />
                   ) : (

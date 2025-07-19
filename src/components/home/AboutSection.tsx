@@ -10,10 +10,11 @@ const AboutSection = () => {
             <div className="relative">
               {/* Main image */}
               <div className="relative w-full  rounded-3xl overflow-hidden">
-                <img
+                <Image
                   src="/images/about.png"
                   alt="Fresh Harvest delivery person"
                   className="w-full h-full object-cover"
+                  fill
                 />
               </div>
 

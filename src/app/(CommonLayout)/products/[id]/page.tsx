@@ -1,6 +1,7 @@
 // src/app/products/[id]/page.tsx
 import { Metadata } from "next";
 import ProductDetailClient from "./ProductDetailClient";
+import Link from "next/link";
 
 // Types
 interface Product {
@@ -121,12 +122,12 @@ export default async function ProductPage({
           <p className="text-lg text-gray-600 mb-8">
             The product you're looking for doesn't exist or has been removed.
           </p>
-          <a
+          <Link
             href="/products"
             className="bg-green hover:bg-green/90 text-white px-6 py-3 rounded-lg font-medium"
           >
             Browse All Products
-          </a>
+          </Link>
         </div>
       </div>
     );

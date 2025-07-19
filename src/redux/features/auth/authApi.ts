@@ -33,7 +33,6 @@ export const authApi = baseApi.injectEndpoints({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log("Registration API Response:", data);
 
           // Extract token from nested data structure
           const token =
@@ -79,8 +78,6 @@ export const authApi = baseApi.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
 
-          console.log("Login API Response:", JSON.stringify(data, null, 2));
-
           // Extract token from the nested response structure
           const token =
             data.data?.token ||
@@ -88,12 +85,9 @@ export const authApi = baseApi.injectEndpoints({
             data.access_token ||
             data.accessToken;
 
-          console.log("Extracted token:", token);
-
           if (token) {
             // Decode JWT to extract user information
             const decodedToken = decodeJWT(token);
-            console.log("Decoded token:", decodedToken);
 
             if (decodedToken) {
               // Create user object from decoded token
@@ -146,10 +140,6 @@ export const authApi = baseApi.injectEndpoints({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log("Profile API Response:", data);
-
-          // If the profile endpoint returns updated user data, you can update the store
-          // dispatch(setUser({ user: data.user, email: data.user.email, token: currentToken }));
         } catch (error: any) {
           if (error?.error?.status === 401) {
             dispatch(logout());

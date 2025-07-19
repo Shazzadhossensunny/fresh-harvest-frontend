@@ -122,9 +122,9 @@ const Footer = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-[#749B3F] mt-0.5" />
-                  <Link href="#" className="text-grey100 text-sm">
+                  <span className="text-grey100 text-sm">
                     Tanjung Sari Street, Pontianak, Indonesia
-                  </Link>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -177,24 +177,15 @@ const Footer = () => {
 
             {/* Social Media Icons */}
             <div className="flex gap-3 order-3">
-              <Link
-                href="#"
-                className="w-8 h-8 bg-black hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
-              >
+              <span className="w-8 h-8 bg-black hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors cursor-pointer">
                 <Twitter className="w-4 h-4 text-white" />
-              </Link>
-              <Link
-                href="#"
-                className="w-8 h-8 bg-black hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
-              >
+              </span>
+              <span className="w-8 h-8 bg-black hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors cursor pointer">
                 <Facebook className="w-4 h-4 text-white" />
-              </Link>
-              <Link
-                href="#"
-                className="w-8 h-8 bg-black hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
-              >
+              </span>
+              <span className="w-8 h-8 bg-black hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors cursor-pointer">
                 <Instagram className="w-4 h-4 text-white" />
-              </Link>
+              </span>
             </div>
           </div>
         </div>

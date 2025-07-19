@@ -32,7 +32,7 @@ const Header = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Get auth data from Redux store
-  const { token, email, name } = useAppSelector((state) => state.auth);
+  const { token, email } = useAppSelector((state) => state.auth);
 
   const isAuthenticated = !!token;
 
@@ -45,10 +45,6 @@ const Header = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  // Debug logs
-  console.log("Auth state:", { token, email, name });
-  console.log("isAuthenticated:", isAuthenticated);
 
   // Get cart data from Redux store
   const { totalQuantity, totalAmount } = useAppSelector((state) => state.cart);

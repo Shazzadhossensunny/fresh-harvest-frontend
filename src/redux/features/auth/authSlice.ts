@@ -23,8 +23,6 @@ const getInitialState = (): TAuth => {
       const email = localStorage.getItem("userEmail");
       const userData = localStorage.getItem("userData");
 
-      console.log("Loading from localStorage:", { token, email, userData }); // Debug log
-
       return {
         token: token || null,
         email: email || null,
@@ -57,8 +55,6 @@ const authSlice = createSlice({
     ) => {
       const { user, email, token } = action.payload;
 
-      console.log("setUser action called with:", { user, email, token }); // Debug log
-
       state.token = token;
       state.name = user;
       state.email = email;
@@ -68,11 +64,9 @@ const authSlice = createSlice({
         try {
           if (token) {
             localStorage.setItem("authToken", token);
-            console.log("Token stored in localStorage:", token);
           }
           localStorage.setItem("userEmail", email);
           localStorage.setItem("userData", JSON.stringify(user));
-          console.log("Auth data stored in localStorage");
         } catch (error) {
           console.error("Error storing auth data to localStorage:", error);
         }
@@ -80,8 +74,6 @@ const authSlice = createSlice({
     },
 
     logout: (state) => {
-      console.log("Logout action called"); // Debug log
-
       state.name = null;
       state.email = null;
       state.token = null;
@@ -92,7 +84,6 @@ const authSlice = createSlice({
           localStorage.removeItem("authToken");
           localStorage.removeItem("userEmail");
           localStorage.removeItem("userData");
-          console.log("Auth data cleared from localStorage");
         } catch (error) {
           console.error("Error clearing auth data from localStorage:", error);
         }
