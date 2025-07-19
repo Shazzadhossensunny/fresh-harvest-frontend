@@ -117,7 +117,7 @@ const ProductShowcase = () => {
 
   if (productsLoading || categoriesLoading) {
     return (
-      <section className="py-16 bg-grey20">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green mx-auto"></div>
@@ -129,10 +129,25 @@ const ProductShowcase = () => {
   }
 
   return (
-    <section className="pt-16 bg-grey20">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="pt-16 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Decorative leaf */}
+        <Image
+          src="/images/leaf.png"
+          alt="Leaf top right"
+          width={60}
+          height={60}
+          className="absolute -top-32 right-0 z-10"
+        />
+        <Image
+          src="/images/leaf.png"
+          alt="Leaf top left"
+          width={60}
+          height={60}
+          className="absolute -top-20 left-0 z-10 rotate-30"
+        />
         {/* Header */}
-        <div className="text-center mb-12 space-y-4">
+        <div className="text-center mt-24 mb-12 space-y-4">
           <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
             Our Products
           </h6>

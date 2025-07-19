@@ -8,7 +8,7 @@ const HeroSection = () => {
       {/* Split Background Design - Extended to top of header */}
       <div className="absolute inset-0 flex">
         {/* Left side - White background */}
-        <div className="w-full lg:w-2/3 bg-gradient-to-r from-gray-50 to-white" />
+        <div className="w-full lg:w-2/3 bg-[#FFFFFF1F]" />
 
         {/* Right side - Food background with green overlay */}
         <div className="hidden lg:block w-1/3 relative">
@@ -43,32 +43,29 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Decorative leaves */}
-      <div className="absolute top-20 left-0 z-20">
-        <Image
-          src="/images/leaf.png"
-          alt="Decorative leaf"
-          width={120}
-          height={120}
-          className="opacity-60"
-        />
-      </div>
-      <div className="absolute top-40 right-20 z-20">
-        <Image
-          src="/images/leaf.png"
-          alt="Decorative leaf"
-          width={80}
-          height={80}
-          className="opacity-40"
-        />
-      </div>
+      {/* Decorative Leaves */}
+
+      <Image
+        src="/images/banner-leaf.png"
+        alt="Leaf left right"
+        width={80}
+        height={80}
+        className="absolute top-5 -left-1 lg:right-4  z-10"
+      />
 
       {/* Container with same padding as header */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-20 h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end min-h-[70vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end min-h-[70vh] relative">
+          <Image
+            src="/images/leaf.png"
+            alt="Leaf top right"
+            width={80}
+            height={80}
+            className="absolute top-0 left-1/2 z-10"
+          />
           {/* Left Content */}
           <div className="space-y-8 lg:pb-20">
-            <div className="space-y-4 mb-8">
+            <div className="space-y-4 mb-8 ">
               <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
                 Welcome to Fresh Harvest
               </h6>
@@ -111,9 +108,19 @@ const HeroSection = () => {
 
             {/* App Download Section */}
             <div className="mt-12">
-              <p className="text-grey100 font-body text-sm mb-4">
-                Download App:
-              </p>
+              <div className="relative">
+                <Image
+                  src="/images/leaf.png"
+                  alt="Decorative leaf"
+                  width={60}
+                  height={60}
+                  className="absolute -bottom-6 -left-6 -z-20"
+                />
+                <p className="text-grey100 font-body text-sm mb-4">
+                  Download App:
+                </p>
+              </div>
+
               <div className="flex gap-4">
                 <Image
                   src="/images/app.png"

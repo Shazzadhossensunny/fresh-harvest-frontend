@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // Types
 type AuthType = "login" | "register";
@@ -26,6 +28,9 @@ interface AuthModalsProps {
   authType: AuthType;
   onClose: () => void;
   onSwitchType: (type: AuthType) => void;
+  // Add your Redux mutation hooks here
+  useLoginMutation: any;
+  useRegisterUserMutation: any;
 }
 
 const AuthModals: React.FC<AuthModalsProps> = ({
@@ -33,6 +38,8 @@ const AuthModals: React.FC<AuthModalsProps> = ({
   authType,
   onClose,
   onSwitchType,
+  useLoginMutation,
+  useRegisterUserMutation,
 }) => {
   if (!isOpen) return null;
 
@@ -51,7 +58,7 @@ const AuthModals: React.FC<AuthModalsProps> = ({
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors z-10"
         >
           <X className="w-6 h-6" />
         </button>
@@ -61,22 +68,19 @@ const AuthModals: React.FC<AuthModalsProps> = ({
             <h2 className="text-3xl font-heading font-medium text-black mb-2">
               {authType === "login" ? "Login" : "Register"}
             </h2>
-            <p className="text-gray-600">
-              {authType === "login"
-                ? "Welcome back to Fresh Harvest"
-                : "Create your Fresh Harvest account"}
-            </p>
           </div>
 
           {authType === "login" ? (
             <LoginForm
               switchToRegister={() => onSwitchType("register")}
               closeModal={onClose}
+              useLoginMutation={useLoginMutation}
             />
           ) : (
             <RegisterForm
               switchToLogin={() => onSwitchType("login")}
               closeModal={onClose}
+              useRegisterUserMutation={useRegisterUserMutation}
             />
           )}
         </div>
@@ -89,19 +93,59 @@ const AuthModals: React.FC<AuthModalsProps> = ({
 const LoginForm = ({
   switchToRegister,
   closeModal,
+  useLoginMutation,
 }: {
   switchToRegister: () => void;
   closeModal: () => void;
+  useLoginMutation: any;
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const [loginUser, { isLoading, error }] = useLoginMutation();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm<LoginFormData>();
 
-  const onSubmit: SubmitHandler<LoginFormData> = (data) => {
-    console.log("Login data:", data);
-    closeModal();
+  // Handle API errors
+  useEffect(() => {
+    if (error) {
+      if ("data" in error) {
+        const errorData = error.data as any;
+        if (errorData?.message) {
+          toast.error(errorData.message);
+        } else if (errorData?.errors) {
+          // Handle validation errors
+          Object.keys(errorData.errors).forEach((field) => {
+            setError(field as keyof LoginFormData, {
+              type: "server",
+              message: errorData.errors[field][0] || `Invalid ${field}`,
+            });
+          });
+        }
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    }
+  }, [error, setError]);
+
+  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
+    try {
+      const result = await loginUser({
+        email: data.email,
+        password: data.password,
+        remember: data.remember,
+      }).unwrap();
+
+      toast.success("Login successful! Welcome back.");
+      closeModal();
+      router.push("/");
+    } catch (err) {
+      console.error("Login error:", err);
+    }
   };
 
   return (
@@ -113,7 +157,7 @@ const LoginForm = ({
           </label>
           <input
             type="email"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-green focus:border-green ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="Enter your email"
@@ -134,20 +178,33 @@ const LoginForm = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
-          <input
-            type="password"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-green focus:border-green ${
-              errors.password ? "border-red-500" : "border-gray-300"
-            }`}
-            placeholder="Enter your password"
-            {...register("password", {
-              required: "Password is required",
-              minLength: {
-                value: 6,
-                message: "Password must be at least 6 characters",
-              },
-            })}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.password ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter your password"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              })}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
           {errors.password && (
             <p className="mt-1 text-sm text-red-500">
               {errors.password.message}
@@ -160,29 +217,24 @@ const LoginForm = ({
             <input
               id="remember"
               type="checkbox"
-              className="h-4 w-4 text-green focus:ring-green border-gray-300 rounded"
+              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded accent-primary"
               {...register("remember")}
             />
             <label
               htmlFor="remember"
-              className="ml-2 block text-sm text-gray-700"
+              className="ml-2 block text-xs text-gray-700"
             >
               Remember me
             </label>
           </div>
-          <button
-            type="button"
-            className="text-sm text-green hover:text-green/80 font-medium"
-          >
-            Forgot Password?
-          </button>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-green hover:bg-green/90 text-white py-3 rounded-lg font-medium transition-colors duration-200"
+          disabled={isLoading}
+          className="w-full bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white py-3 rounded-lg font-heading font-medium transition-colors duration-200"
         >
-          Login
+          {isLoading ? "Signing in..." : "Login"}
         </button>
 
         <div className="relative my-6">
@@ -190,34 +242,36 @@ const LoginForm = ({
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or Sign in with</span>
+            <span className="px-2 bg-white text-black font-heading">
+              Or Sign in with
+            </span>
           </div>
         </div>
 
         <div className="flex gap-4">
           <button
             type="button"
-            className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 py-3 rounded-lg font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 border border-[#D9D9D9] bg-gray-100 hover:bg-gray-200 py-3 rounded-lg font-medium transition-colors"
           >
             <FcGoogle className="w-5 h-5" />
             Google
           </button>
           <button
             type="button"
-            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 border border-[#D9D9D9] bg-gray-100 hover:bg-gray-200 py-3 rounded-lg font-medium transition-colors"
           >
-            <FaFacebook className="w-5 h-5" />
+            <FaFacebook className="w-5 h-5 text-blue-700" />
             Facebook
           </button>
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-gray-600">
+          <p className="text-black font-heading font-medium">
             Don't have an account?{" "}
             <button
               type="button"
               onClick={switchToRegister}
-              className="text-green hover:text-green/80 font-medium"
+              className="text-primary hover:text-primary/80"
             >
               Sign up
             </button>
@@ -232,19 +286,57 @@ const LoginForm = ({
 const RegisterForm = ({
   switchToLogin,
   closeModal,
+  useRegisterUserMutation,
 }: {
   switchToLogin: () => void;
   closeModal: () => void;
+  useRegisterUserMutation: any;
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [registerUser, { isLoading, error }] = useRegisterUserMutation();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm<RegisterFormData>();
 
-  const onSubmit: SubmitHandler<RegisterFormData> = (data) => {
-    console.log("Register data:", data);
-    closeModal();
+  // Handle API errors
+  useEffect(() => {
+    if (error) {
+      if ("data" in error) {
+        const errorData = error.data as any;
+        if (errorData?.message) {
+          toast.error(errorData.message);
+        } else if (errorData?.errors) {
+          // Handle validation errors
+          Object.keys(errorData.errors).forEach((field) => {
+            setError(field as keyof RegisterFormData, {
+              type: "server",
+              message: errorData.errors[field][0] || `Invalid ${field}`,
+            });
+          });
+        }
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
+    }
+  }, [error, setError]);
+
+  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
+    try {
+      const result = await registerUser({
+        fullName: data.name,
+        email: data.email,
+        password: data.password,
+      }).unwrap();
+
+      toast.success("Registration successful! Please login to continue.");
+      switchToLogin(); // Switch to login form after successful registration
+    } catch (err) {
+      console.error("Registration error:", err);
+    }
   };
 
   return (
@@ -256,11 +348,17 @@ const RegisterForm = ({
           </label>
           <input
             type="text"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-green focus:border-green ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
               errors.name ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="Enter your name"
-            {...register("name", { required: "Name is required" })}
+            {...register("name", {
+              required: "Name is required",
+              minLength: {
+                value: 2,
+                message: "Name must be at least 2 characters",
+              },
+            })}
           />
           {errors.name && (
             <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
@@ -273,7 +371,7 @@ const RegisterForm = ({
           </label>
           <input
             type="email"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-green focus:border-green ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="Enter your email"
@@ -294,20 +392,38 @@ const RegisterForm = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
-          <input
-            type="password"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-green focus:border-green ${
-              errors.password ? "border-red-500" : "border-gray-300"
-            }`}
-            placeholder="Enter your password"
-            {...register("password", {
-              required: "Password is required",
-              minLength: {
-                value: 6,
-                message: "Password must be at least 6 characters",
-              },
-            })}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.password ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter your password"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+                pattern: {
+                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                  message:
+                    "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+                },
+              })}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
           {errors.password && (
             <p className="mt-1 text-sm text-red-500">
               {errors.password.message}
@@ -317,9 +433,10 @@ const RegisterForm = ({
 
         <button
           type="submit"
-          className="w-full bg-green hover:bg-green/90 text-white py-3 rounded-lg font-medium transition-colors duration-200"
+          disabled={isLoading}
+          className="w-full bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white py-3 rounded-lg font-heading font-medium transition-colors duration-200"
         >
-          Register
+          {isLoading ? "Creating account..." : "Register"}
         </button>
 
         <div className="relative my-6">
@@ -327,34 +444,36 @@ const RegisterForm = ({
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or Sign Up with</span>
+            <span className="px-2 bg-white text-black font-heading">
+              Or Sign Up with
+            </span>
           </div>
         </div>
 
         <div className="flex gap-4">
           <button
             type="button"
-            className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 py-3 rounded-lg font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 border border-[#D9D9D9] bg-gray-100 hover:bg-gray-200 py-3 rounded-lg font-medium transition-colors"
           >
             <FcGoogle className="w-5 h-5" />
             Google
           </button>
           <button
             type="button"
-            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 border border-[#D9D9D9] bg-gray-100 hover:bg-gray-200 py-3 rounded-lg font-medium transition-colors"
           >
-            <FaFacebook className="w-5 h-5" />
+            <FaFacebook className="w-5 h-5 text-blue-700" />
             Facebook
           </button>
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-gray-600">
+          <p className="text-black font-heading font-medium">
             Already have an account?{" "}
             <button
               type="button"
               onClick={switchToLogin}
-              className="text-green hover:text-green/80 font-medium"
+              className="text-primary hover:text-primary/80"
             >
               Log In
             </button>

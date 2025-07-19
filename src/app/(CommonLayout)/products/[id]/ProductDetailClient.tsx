@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Heart, ShoppingCart, Minus, Plus } from "lucide-react";
+import { Navigation, Thumbs } from "swiper/modules";
 
 // Import Swiper styles (you'll need to add these to your project)
 import "swiper/css";
@@ -16,7 +17,8 @@ import {
 import { useGetCategoryByIdQuery } from "@/redux/features/category/categoryApi";
 import { toast } from "sonner";
 import { addToCart } from "@/redux/features/cart/cartSlice";
-import { useAppDispatch } from "@/redux/hooks";
+import { toggleFavorite } from "@/redux/features/favorites/favoritesSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 // Import your RTK Query hooks
 
@@ -73,6 +75,12 @@ const ProductDetailClient = ({
     useGetAllProductsQuery(undefined);
   const dispatch = useAppDispatch();
 
+  // Get favorites from Redux store
+  const favorites = useAppSelector((state) => state.favorites.items);
+
+  // Check if current product is in favorites
+  const isProductFavorite = favorites.some((item) => item.id === product.id);
+
   // Filter related products (same category, excluding current product)
   const relatedProducts = useMemo(() => {
     if (!allProductsData?.data || !product) return [];
@@ -91,7 +99,6 @@ const ProductDetailClient = ({
   const [activeTab, setActiveTab] = useState("description");
   const [quantity, setQuantity] = useState(1);
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [reviews] = useState<Review[]>([
     {
@@ -140,7 +147,7 @@ const ProductDetailClient = ({
     });
   };
 
-  // Handle add to cart functionality for related products (quantity 1)
+  // Handle add to cart functionality for related products with favorite check
   const handleAddToCartRelated = (relatedProduct: Product) => {
     if (relatedProduct.stock === 0) {
       toast.error("This product is out of stock");
@@ -160,13 +167,63 @@ const ProductDetailClient = ({
 
     // Show success toast
     toast.success(`${relatedProduct.productName} added to cart!`, {
-      description: `$${relatedProduct.price} • 1 item`,
+      description: `${relatedProduct.price} • 1 item`,
       duration: 3000,
     });
   };
 
+  // Handle toggle favorite for related products
+  const handleToggleFavoriteRelated = (relatedProduct: Product) => {
+    const favoriteItem = {
+      id: relatedProduct.id,
+      name: relatedProduct.productName,
+      price: relatedProduct.price,
+      image: relatedProduct.images[0] || "/images/default-product.jpg",
+    };
+
+    const isRelatedFavorite = favorites.some(
+      (item) => item.id === relatedProduct.id
+    );
+
+    dispatch(toggleFavorite(favoriteItem));
+
+    // Show appropriate toast message
+    if (isRelatedFavorite) {
+      toast.success(`${relatedProduct.productName} removed from favorites!`, {
+        description: "Item removed from your favorites list",
+        duration: 3000,
+      });
+    } else {
+      toast.success(`${relatedProduct.productName} added to favorites!`, {
+        description: "Item saved to your favorites list",
+        duration: 3000,
+      });
+    }
+  };
+
+  // Handle toggle favorite functionality
   const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+    const favoriteItem = {
+      id: product.id,
+      name: product.productName,
+      price: product.price,
+      image: product.images[0] || "/images/default-product.jpg",
+    };
+
+    dispatch(toggleFavorite(favoriteItem));
+
+    // Show appropriate toast message
+    if (isProductFavorite) {
+      toast.success(`${product.productName} removed from favorites!`, {
+        description: "Item removed from your favorites list",
+        duration: 3000,
+      });
+    } else {
+      toast.success(`${product.productName} added to favorites!`, {
+        description: "Item saved to your favorites list",
+        duration: 3000,
+      });
+    }
   };
 
   const handleSubmitReview = (e: React.FormEvent) => {
@@ -385,18 +442,22 @@ const ProductDetailClient = ({
             <div className="flex gap-4">
               <button
                 onClick={handleToggleFavorite}
-                className={`flex items-center gap-2.5 text-grey100 font-heading text-lg px-8 py-4 rounded-lg font-semibold transition-colors flex-1 justify-center ${
-                  isFavorite
-                    ? "bg-primary text-white hover:bg-primary"
+                className={`flex items-center gap-2.5 font-heading text-lg px-8 py-4 rounded-lg font-semibold transition-colors flex-1 justify-center ${
+                  isProductFavorite
+                    ? "bg-primary text-white hover:bg-orange-600"
                     : "bg-grey20 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 <Heart
-                  className={`w-5 h-5 text-[#D9D9D9] ${
-                    isFavorite ? "fill-current" : ""
+                  className={`w-5 h-5 ${
+                    isProductFavorite
+                      ? "fill-current text-white"
+                      : "text-[#D9D9D9]"
                   }`}
                 />
-                Save as favorite
+                {isProductFavorite
+                  ? "Remove from favorites"
+                  : "Save as favorite"}
               </button>
 
               <button
@@ -555,6 +616,33 @@ const ProductDetailClient = ({
                             {relatedProduct.stock === 0
                               ? "Out of Stock"
                               : "Add to cart"}
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleToggleFavoriteRelated(relatedProduct)
+                            }
+                            className={`w-full py-2 rounded-lg font-heading text-sm font-normal transition-colors duration-200 flex items-center justify-center gap-2 ${
+                              favorites.some(
+                                (item) => item.id === relatedProduct.id
+                              )
+                                ? "bg-primary text-white hover:bg-orange-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            <Heart
+                              className={`w-4 h-4 ${
+                                favorites.some(
+                                  (item) => item.id === relatedProduct.id
+                                )
+                                  ? "fill-current"
+                                  : ""
+                              }`}
+                            />
+                            {favorites.some(
+                              (item) => item.id === relatedProduct.id
+                            )
+                              ? "Remove from favorites"
+                              : "Add to favorites"}
                           </button>
                         </div>
                       </div>

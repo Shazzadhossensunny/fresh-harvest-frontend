@@ -1,10 +1,8 @@
-import React from "react";
-import { Leaf } from "lucide-react";
 import Image from "next/image";
 
 const AboutSection = () => {
   return (
-    <section className="pb-16 bg-grey20">
+    <section className="pb-16 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           {/* Image Column */}
