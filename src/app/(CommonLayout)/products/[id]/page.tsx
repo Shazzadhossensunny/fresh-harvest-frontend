@@ -56,10 +56,12 @@ async function getProduct(id: string): Promise<Product> {
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>; // Updated to Promise type
 }): Promise<Metadata> {
   try {
-    const product = await getProduct(params.id);
+    // Await params before accessing properties
+    const { id } = await params;
+    const product = await getProduct(id);
 
     return {
       title: `${product.productName} | Fresh Harvest`,
@@ -83,7 +85,7 @@ export async function generateMetadata({
         images: product.images,
       },
       alternates: {
-        canonical: `/products/${params.id}`,
+        canonical: `/products/${id}`,
       },
     };
   } catch (error) {
@@ -98,16 +100,17 @@ export async function generateMetadata({
 export default async function ProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>; // Updated to Promise type
 }) {
   try {
+    // Await params before accessing properties
+    const { id } = await params;
+
     // Fetch product data on the server for SEO
-    const product = await getProduct(params.id);
+    const product = await getProduct(id);
 
     // Pass the server-fetched data to the client component
-    return (
-      <ProductDetailClient initialProduct={product} productId={params.id} />
-    );
+    return <ProductDetailClient initialProduct={product} productId={id} />;
   } catch (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

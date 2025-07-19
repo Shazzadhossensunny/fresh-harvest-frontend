@@ -237,7 +237,7 @@ const ProductShowcase = () => {
 
         {/* See All Products button */}
         <div className="text-center">
-          <Link href="/products">
+          <Link href="#">
             <button className="bg-white hover:bg-primary text-primary hover:text-white border-2 border-primary px-8 py-4 rounded-lg font-heading text-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
               See All Products
             </button>

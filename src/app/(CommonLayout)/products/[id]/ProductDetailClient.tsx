@@ -1,15 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Heart, ShoppingCart, Minus, Plus } from "lucide-react";
-import { Navigation, Thumbs } from "swiper/modules";
 
 // Import Swiper styles (you'll need to add these to your project)
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
+import {
+  useGetAllProductsQuery,
+  useGetProductByIdQuery,
+} from "@/redux/features/products/productApi";
+import { useGetCategoryByIdQuery } from "@/redux/features/category/categoryApi";
+import { toast } from "sonner";
+import { addToCart } from "@/redux/features/cart/cartSlice";
+import { useAppDispatch } from "@/redux/hooks";
+
+// Import your RTK Query hooks
 
 // Types
 interface Product {
@@ -22,6 +31,13 @@ interface Product {
   categoryId: string;
   category?: string;
   isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Category {
+  id: string;
+  categoryName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,53 +55,50 @@ interface ProductDetailClientProps {
   productId: string;
 }
 
-// Related products data (you can replace with actual API call)
-const relatedProducts = [
-  {
-    id: "1",
-    name: "Kiwi",
-    price: 5.3,
-    image: "/images/kiwi.jpg",
-  },
-  {
-    id: "2",
-    name: "Orange",
-    price: 4.2,
-    image: "/images/orange.jpg",
-  },
-  {
-    id: "3",
-    name: "Guava",
-    price: 2.2,
-    image: "/images/guava.jpg",
-  },
-  {
-    id: "4",
-    name: "Eggplant",
-    price: 1.2,
-    image: "/images/eggplant.jpg",
-  },
-];
-
-const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
+const ProductDetailClient = ({
   initialProduct,
   productId,
-}) => {
-  // Use server data initially
-  const product = initialProduct;
+}: ProductDetailClientProps) => {
+  // Use server data initially, but also fetch fresh data for interactivity
+  const { data: productData, isLoading: productLoading } =
+    useGetProductByIdQuery(productId);
+  const product = productData?.data || initialProduct;
+
+  // Fetch category data
+  const { data: categoryData, isLoading: categoryLoading } =
+    useGetCategoryByIdQuery(product.categoryId, { skip: !product.categoryId });
+
+  // Fetch all products to get related products
+  const { data: allProductsData, isLoading: allProductsLoading } =
+    useGetAllProductsQuery(undefined);
+  const dispatch = useAppDispatch();
+
+  // Filter related products (same category, excluding current product)
+  const relatedProducts = useMemo(() => {
+    if (!allProductsData?.data || !product) return [];
+
+    return allProductsData.data
+      .filter(
+        (p: Product) =>
+          p.categoryId === product.categoryId &&
+          p.id !== product.id &&
+          !p.isDeleted
+      )
+      .slice(0, 4); // Limit to 4 related products
+  }, [allProductsData?.data, product]);
 
   // Local state
   const [activeTab, setActiveTab] = useState("description");
   const [quantity, setQuantity] = useState(1);
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [reviews] = useState<Review[]>([
     {
       id: "1",
       userName: "Arman Khan",
       rating: 5,
-      comment:
-        "Our coconuts are sustainably grown, ensuring the best quality and taste. Each coconut is handpicked and carefully prepared, offering you the freshest product possible. Rich in healthy fats, electrolytes, and essential nutrients, coconuts provide both hydration and nourishment. Whether you're using the water, flesh, or milk, our coconuts bring versatility to your kitchen while supporting healthy living.\n\nPerfect for smoothies, desserts, curries, and more — let the natural sweetness of the coconut elevate your recipes. Enjoy the tropical goodness in its purest form, directly from nature.",
+      comment: `Our ${product.productName.toLowerCase()}s are sustainably grown, ensuring the best quality and taste. Each ${product.productName.toLowerCase()} is handpicked and carefully prepared, offering you the freshest product possible. Rich in essential nutrients, our ${product.productName.toLowerCase()}s provide both great taste and nourishment. Whether you're using them fresh or in recipes, our ${product.productName.toLowerCase()}s bring versatility to your kitchen while supporting healthy living.\n\nPerfect for smoothies, desserts, snacks, and more — let the natural goodness of ${product.productName.toLowerCase()} elevate your recipes. Enjoy the fresh taste in its purest form, directly from nature.`,
       date: "2024-12-01",
     },
   ]);
@@ -95,9 +108,61 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     setQuantity((qty) => Math.min(qty + 1, product.stock));
   const decreaseQuantity = () => setQuantity((qty) => Math.max(qty - 1, 1));
 
+  // Handle add to cart functionality for main product (with custom quantity)
   const handleAddToCart = () => {
-    // Add to cart logic
-    alert(`${quantity} ${product.productName}(s) added to cart!`);
+    if (product.stock === 0) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
+    if (quantity > product.stock) {
+      toast.error(`Only ${product.stock} items available in stock`);
+      return;
+    }
+
+    const cartItem = {
+      id: product.id,
+      name: product.productName,
+      price: product.price,
+      quantity: quantity, // Use the selected quantity
+      stock: product.stock,
+      imageUrl: product.images[0] || undefined,
+    };
+
+    dispatch(addToCart(cartItem));
+
+    // Show success toast
+    toast.success(`${product.productName} added to cart!`, {
+      description: `$${product.price} • ${quantity} item${
+        quantity > 1 ? "s" : ""
+      }`,
+      duration: 3000,
+    });
+  };
+
+  // Handle add to cart functionality for related products (quantity 1)
+  const handleAddToCartRelated = (relatedProduct: Product) => {
+    if (relatedProduct.stock === 0) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
+    const cartItem = {
+      id: relatedProduct.id,
+      name: relatedProduct.productName,
+      price: relatedProduct.price,
+      quantity: 1, // Default quantity for related products
+      stock: relatedProduct.stock,
+      imageUrl: relatedProduct.images[0] || undefined,
+    };
+
+    dispatch(addToCart(cartItem));
+
+    // Show success toast
+    toast.success(`${relatedProduct.productName} added to cart!`, {
+      description: `$${relatedProduct.price} • 1 item`,
+      duration: 3000,
+    });
   };
 
   const handleToggleFavorite = () => {
@@ -109,6 +174,37 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     console.log("Review submitted");
   };
 
+  // Image navigation handlers
+  const nextImage = () => {
+    setCurrentImageIndex((prev) =>
+      prev === product.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? product.images.length - 1 : prev - 1
+    );
+  };
+
+  const goToImage = (index: number) => {
+    setCurrentImageIndex(index);
+  };
+
+  // Loading state
+  if (productLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">
+            Loading product details...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -117,27 +213,94 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
           <div className=" border border-[#0000001A] rounded-xl p-8 shadow-sm">
             <div className="relative">
               {/* Main product image */}
-              <div className="aspect-square mb-4 rounded-xl overflow-hidden relative">
+              <div className="aspect-square mb-4 rounded-xl overflow-hidden relative group">
                 <Image
-                  src={product.images[0] || "/images/coconut.jpg"}
-                  alt={product.productName}
+                  src={
+                    product.images[currentImageIndex] ||
+                    "/images/default-product.jpg"
+                  }
+                  alt={`${product.productName} - Image ${
+                    currentImageIndex + 1
+                  }`}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-300"
                   priority
                 />
+
+                {/* Navigation arrows - only show if more than 1 image */}
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      aria-label="Previous image"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      aria-label="Next image"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Image counter */}
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                      {currentImageIndex + 1} / {product.images.length}
+                    </div>
+                  </>
+                )}
               </div>
 
-              {/* Thumbnail dots indicator */}
-              <div className="flex justify-center gap-2">
-                {[0, 1, 2].map((dot, index) => (
-                  <button
-                    key={index}
-                    className={`w-3 h-3 rounded-full transition-colors ${
-                      index === 0 ? "bg-green-600" : "bg-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
+              {/* Navigation bullets - only show if more than 1 image */}
+              {product.images.length > 1 && (
+                <div className="flex justify-center gap-2">
+                  {product.images.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToImage(index)}
+                      className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                        index === currentImageIndex
+                          ? "bg-green-600"
+                          : "bg-gray-300 hover:bg-gray-400"
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Single image - just show one dot if only one image */}
+              {product.images.length === 1 && (
+                <div className="flex justify-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-600"></div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -145,8 +308,10 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
           <div className="space-y-4">
             {/* Category Tag */}
             <div>
-              <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
-                {product.category || "Fruits"}
+              <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block capitalize">
+                {categoryLoading
+                  ? "Loading..."
+                  : categoryData?.data?.categoryName || "Product"}
               </h6>
             </div>
 
@@ -175,6 +340,17 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
             <p className="text-grey100 text-lg leading-relaxed pb-20">
               {product.description}
             </p>
+
+            {/* Stock Info */}
+            <div className="text-sm text-gray-600 mb-4">
+              {product.stock > 0 ? (
+                <span className="text-green-600">
+                  ✓ In Stock ({product.stock} available)
+                </span>
+              ) : (
+                <span className="text-red-600">✗ Out of Stock</span>
+              )}
+            </div>
 
             {/* Quantity Selector */}
             <div className="space-y-3 flex items-center gap-2 pb-10">
@@ -225,11 +401,11 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
 
               <button
                 onClick={handleAddToCart}
-                className="flex items-center gap-2.5 bg-primary hover:bg-orange-600 font-heading text-lg px-8 py-4 text-white rounded-lg font-semibold transition-colors flex-1 justify-center"
+                className="flex items-center gap-2.5 bg-primary hover:bg-orange-600 font-heading text-lg px-8 py-4 text-white rounded-lg font-semibold transition-colors flex-1 justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
                 disabled={product.stock === 0}
               >
                 <ShoppingCart className="w-5 h-5" />
-                Add to cart
+                {product.stock === 0 ? "Out of Stock" : "Add to cart"}
               </button>
             </div>
           </div>
@@ -265,19 +441,13 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               <div className="space-y-6">
                 <div className="prose max-w-none">
                   <p className="text-grey100 text-lg font-body leading-relaxed mb-4">
-                    Our coconuts are sustainably grown, ensuring the best
-                    quality and taste. Each coconut is handpicked and carefully
-                    prepared, offering you the freshest product possible. Rich
-                    in healthy fats, electrolytes, and essential nutrients,
-                    coconuts provide both hydration and nourishment. Whether
-                    you're using the water, flesh, or milk, our coconuts bring
-                    versatility to your kitchen while supporting healthy living.
+                    {product.description}
                   </p>
                   <p className="text-grey100 text-lg font-body leading-relaxed">
-                    Perfect for smoothies, desserts, curries, and more — let the
-                    natural sweetness of the coconut elevate your recipes. Enjoy
-                    the tropical goodness in its purest form, directly from
-                    nature.
+                    Our {product.productName.toLowerCase()}s are carefully
+                    selected and stored under optimal conditions to ensure
+                    maximum freshness and nutritional value. Perfect for daily
+                    consumption and various culinary applications.
                   </p>
                 </div>
               </div>
@@ -302,7 +472,9 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                         />
                       ))}
                     </div>
-                    <p className="text-gray-700">{review.comment}</p>
+                    <p className="text-gray-700 whitespace-pre-line">
+                      {review.comment}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -311,41 +483,86 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
         </div>
 
         {/* Related Products Section */}
-        <div className="text-center mb-12 space-y-4">
-          <h6 className="ext-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
-            Our Products
-          </h6>
-          <h2 className="text-black font-heading text-5xl font-medium">
-            Related products
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-48">
-          {relatedProducts.map((relatedProduct) => (
-            <div
-              key={relatedProduct.id}
-              className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="aspect-square bg-gray-100 rounded-xl mb-4 overflow-hidden relative">
-                <Image
-                  src={relatedProduct.image}
-                  alt={relatedProduct.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                {relatedProduct.name}
-              </h3>
-              <p className="text-gray-600 text-lg mb-4">
-                ${relatedProduct.price}/kg
-              </p>
-              <button className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                Add to cart
-              </button>
+        {relatedProducts.length > 0 && (
+          <>
+            <div className="text-center mb-12 space-y-4">
+              <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
+                Our Products
+              </h6>
+              <h2 className="text-black font-heading text-5xl font-medium">
+                Related products
+              </h2>
             </div>
-          ))}
-        </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-48">
+              {allProductsLoading
+                ? // Loading skeleton for related products
+                  [...Array(4)].map((_, index) => (
+                    <div
+                      key={index}
+                      className="bg-white rounded-2xl p-6 shadow-sm animate-pulse"
+                    >
+                      <div className="aspect-square bg-gray-200 rounded-xl mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                      <div className="h-10 bg-gray-200 rounded"></div>
+                    </div>
+                  ))
+                : relatedProducts.map((relatedProduct: Product) => (
+                    <div
+                      key={relatedProduct.id}
+                      className="bg-white rounded-2xl pt-[10px] px-3 pb-5 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 group"
+                    >
+                      <Link href={`/products/${relatedProduct.id}`}>
+                        <div className="relative h-48 bg-grey20 p-3 flex items-center justify-center overflow-hidden cursor-pointer rounded-2xl">
+                          <Image
+                            src={
+                              relatedProduct.images[0] ||
+                              "/images/default-product.jpg"
+                            }
+                            alt={relatedProduct.productName}
+                            width={200}
+                            height={200}
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/placeholder-product.jpg";
+                            }}
+                          />
+                        </div>
+                      </Link>
+                      <div className="text-center">
+                        <Link href={`/products/${relatedProduct.id}`}>
+                          <h3 className="text-black font-heading text-lg font-medium hover:text-green transition-colors duration-200 cursor-pointer">
+                            {relatedProduct.productName}
+                          </h3>
+                        </Link>
+                        <p className="text-grey100 text-lg mt-2">
+                          ${relatedProduct.price}/kg
+                        </p>
+                        <div className="flex flex-col gap-2 mt-3">
+                          <button
+                            onClick={() =>
+                              handleAddToCartRelated(relatedProduct)
+                            }
+                            className={`w-full py-3 rounded-lg font-heading text-lg font-normal transition-colors duration-200 ${
+                              relatedProduct.stock === 0
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                : "bg-white text-black border border-grey80 hover:bg-primary hover:text-white hover:border-primary"
+                            }`}
+                            disabled={relatedProduct.stock === 0}
+                          >
+                            {relatedProduct.stock === 0
+                              ? "Out of Stock"
+                              : "Add to cart"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
