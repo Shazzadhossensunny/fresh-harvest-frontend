@@ -1,21 +1,12 @@
-// src/app/products/[id]/ProductDetailClient.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { FaStar, FaHeart, FaRegHeart, FaShoppingCart } from "react-icons/fa";
-import { Swiper, SwiperSlide } from "swiper/react";
+import { Star, Heart, ShoppingCart, Minus, Plus } from "lucide-react";
 import { Navigation, Thumbs } from "swiper/modules";
-import { useDispatch, useSelector } from "react-redux";
 
-// Redux imports
-import { useGetProductByIdQuery } from "@/redux/features/products/productApi";
-import { addToCart } from "@/redux/features/cart/cartSlice";
-import { toggleFavorite } from "@/redux/features/favorites/favoritesSlice";
-import { RootState } from "@/redux/store";
-
-// Import Swiper styles
+// Import Swiper styles (you'll need to add these to your project)
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
@@ -29,6 +20,7 @@ interface Product {
   stock: number;
   images: string[];
   categoryId: string;
+  category?: string;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -47,53 +39,56 @@ interface ProductDetailClientProps {
   productId: string;
 }
 
+// Related products data (you can replace with actual API call)
+const relatedProducts = [
+  {
+    id: "1",
+    name: "Kiwi",
+    price: 5.3,
+    image: "/images/kiwi.jpg",
+  },
+  {
+    id: "2",
+    name: "Orange",
+    price: 4.2,
+    image: "/images/orange.jpg",
+  },
+  {
+    id: "3",
+    name: "Guava",
+    price: 2.2,
+    image: "/images/guava.jpg",
+  },
+  {
+    id: "4",
+    name: "Eggplant",
+    price: 1.2,
+    image: "/images/eggplant.jpg",
+  },
+];
+
 const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
   initialProduct,
   productId,
 }) => {
-  const dispatch = useDispatch();
-
-  // Redux state
-  const favorites = useSelector((state: RootState) => state.favorites.items);
-  const cartItems = useSelector((state: RootState) => state.cart.items);
-
-  // RTK Query for real-time data updates (optional)
-  const {
-    data: productData,
-    isLoading,
-    error,
-  } = useGetProductByIdQuery(productId, {
-    // Use initial data from server, but allow background refetch
-    refetchOnMountOrArgChange: false,
-    refetchOnFocus: false,
-  });
-
-  // Use server data initially, fallback to RTK Query data
-  const product = productData?.data || initialProduct;
+  // Use server data initially
+  const product = initialProduct;
 
   // Local state
   const [activeTab, setActiveTab] = useState("description");
   const [quantity, setQuantity] = useState(1);
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [reviews] = useState<Review[]>([
     {
       id: "1",
       userName: "Arman Khan",
       rating: 5,
-      comment: "Amazing quality! Fresh and delicious. Highly recommended!",
+      comment:
+        "Our coconuts are sustainably grown, ensuring the best quality and taste. Each coconut is handpicked and carefully prepared, offering you the freshest product possible. Rich in healthy fats, electrolytes, and essential nutrients, coconuts provide both hydration and nourishment. Whether you're using the water, flesh, or milk, our coconuts bring versatility to your kitchen while supporting healthy living.\n\nPerfect for smoothies, desserts, curries, and more — let the natural sweetness of the coconut elevate your recipes. Enjoy the tropical goodness in its purest form, directly from nature.",
       date: "2024-12-01",
     },
-    {
-      id: "2",
-      userName: "Sarah Johnson",
-      rating: 4,
-      comment: "Good product, quick delivery. Will order again.",
-      date: "2024-11-28",
-    },
   ]);
-
-  // Check if product is favorite
-  const isFavorite = favorites.some((fav) => fav.id === product.id);
 
   // Handlers
   const increaseQuantity = () =>
@@ -101,372 +96,268 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
   const decreaseQuantity = () => setQuantity((qty) => Math.max(qty - 1, 1));
 
   const handleAddToCart = () => {
-    dispatch(
-      addToCart({
-        id: product.id,
-        name: product.productName,
-        price: product.price,
-        quantity: quantity,
-        imageUrl: product.images[0],
-        stock: product.stock,
-      })
-    );
-
-    // Show success message (you can implement toast notification)
+    // Add to cart logic
     alert(`${quantity} ${product.productName}(s) added to cart!`);
   };
 
   const handleToggleFavorite = () => {
-    dispatch(
-      toggleFavorite({
-        id: product.id,
-        name: product.productName,
-        price: product.price,
-        image: product.images[0],
-      })
-    );
+    setIsFavorite(!isFavorite);
   };
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement review submission logic
     console.log("Review submitted");
   };
 
-  // Loading state
-  if (isLoading && !initialProduct) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading product details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error && !initialProduct) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
-            Error Loading Product
-          </h1>
-          <p className="text-gray-600">Please try again later.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Breadcrumb */}
-      <nav className="flex mb-8" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              href="/"
-              className="text-green hover:text-green/80 font-medium"
-            >
-              Home
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                href="/products"
-                className="text-green hover:text-green/80 font-medium"
-              >
-                Products
-              </Link>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+          {/* Product Gallery */}
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <div className="relative">
+              {/* Main product image */}
+              <div className="aspect-square mb-4 bg-gray-100 rounded-xl overflow-hidden relative">
+                <Image
+                  src={product.images[0] || "/images/coconut.jpg"}
+                  alt={product.productName}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                {/* Blue circle with number - positioned like in image */}
+                <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                  0
+                </div>
+              </div>
+
+              {/* Thumbnail dots indicator */}
+              <div className="flex justify-center gap-2">
+                {[0, 1, 2].map((dot, index) => (
+                  <button
+                    key={index}
+                    className={`w-3 h-3 rounded-full transition-colors ${
+                      index === 0 ? "bg-green-600" : "bg-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-gray-500 font-medium">
-                {product.productName}
+          </div>
+
+          {/* Product Details */}
+          <div className="space-y-6">
+            {/* Category Tag */}
+            <div>
+              <span className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+                {product.category || "Fruits"}
               </span>
             </div>
-          </li>
-        </ol>
-      </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Product Gallery */}
-        <div>
-          <Swiper
-            spaceBetween={10}
-            navigation={true}
-            thumbs={{ swiper: thumbsSwiper }}
-            modules={[Navigation, Thumbs]}
-            className="mb-4 rounded-xl overflow-hidden h-96"
-          >
-            {product.images.map((image, index) => (
-              <SwiperSlide key={index}>
-                <div className="relative w-full h-full">
-                  <Image
-                    src={image}
-                    alt={product.productName}
-                    fill
-                    className="object-cover rounded-xl"
-                    priority={index === 0}
-                  />
+            {/* Product Name */}
+            <h1 className="text-4xl font-bold text-gray-900">
+              {product.productName}
+            </h1>
+
+            {/* Rating */}
+            <div className="flex items-center gap-2">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+              <span className="text-gray-600 font-medium">5.0 (1 review)</span>
+            </div>
+
+            {/* Price */}
+            <div className="text-3xl font-bold text-orange-500">
+              ${product.price}/kg
+            </div>
+
+            {/* Yellow highlighted description box */}
+            <div className="bg-yellow-100 border-2 border-yellow-200 rounded-lg p-4">
+              <p className="text-gray-800 leading-relaxed">
+                From our farm directly to your door, our fresh coconuts are
+                harvested at the peak of ripeness, offering you a sweet,
+                hydrating treat full of flavor. Packed with natural nutrients,
+                coconut is perfect for a variety of culinary uses, from
+                smoothies to savory dishes, or even for a refreshing drink
+                straight from the shell.
+              </p>
+            </div>
+
+            {/* Quantity Selector */}
+            <div className="space-y-3">
+              <label className="text-lg font-medium text-gray-900">
+                Quantity
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center border border-gray-300 rounded-lg">
+                  <button
+                    onClick={decreaseQuantity}
+                    className="p-3 hover:bg-gray-50 transition-colors"
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="px-6 py-3 font-medium text-lg min-w-[60px] text-center">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={increaseQuantity}
+                    className="p-3 hover:bg-gray-50 transition-colors"
+                    disabled={quantity >= product.stock}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                <span className="text-gray-600">/kg</span>
+              </div>
+            </div>
 
-          {product.images.length > 1 && (
-            <Swiper
-              onSwiper={setThumbsSwiper}
-              spaceBetween={10}
-              slidesPerView={4}
-              freeMode={true}
-              watchSlidesProgress={true}
-              modules={[Thumbs]}
-              className="h-24"
-            >
-              {product.images.map((image, index) => (
-                <SwiperSlide key={index} className="cursor-pointer">
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={image}
-                      alt={`${product.productName} thumbnail ${index + 1}`}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          )}
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleToggleFavorite}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 justify-center ${
+                  isFavorite
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                <Heart
+                  className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`}
+                />
+                Save as favorite
+              </button>
+
+              <button
+                onClick={handleAddToCart}
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-medium transition-colors flex-1 justify-center"
+                disabled={product.stock === 0}
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Add to cart
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Product Details */}
-        <div>
-          <h1 className="text-4xl font-heading font-medium text-black mb-2">
-            {product.productName}
-          </h1>
-
-          <div className="flex items-center mb-4">
-            <div className="flex text-yellow-400">
-              {[...Array(5)].map((_, i) => (
-                <FaStar key={i} className="w-5 h-5" />
-              ))}
-            </div>
-            <span className="ml-2 text-gray-600">
-              5.0 ({reviews.length} reviews)
-            </span>
-          </div>
-
-          <div className="text-3xl font-heading font-medium text-green mb-6">
-            ${product.price}/kg
-          </div>
-
-          <div className="mb-6">
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                product.stock > 0
-                  ? "bg-green/10 text-green"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
-              {product.stock > 0
-                ? `In Stock (${product.stock} available)`
-                : "Out of Stock"}
-            </span>
-          </div>
-
-          <p className="text-gray-700 mb-8 leading-relaxed">
-            {product.description.split("\n")[0]}
-          </p>
-
-          <div className="mb-8">
-            <h3 className="text-lg font-medium text-black mb-3">Quantity</h3>
-            <div className="flex items-center">
+        {/* Description/Reviews Tabs */}
+        <div className="bg-white rounded-2xl p-8 shadow-sm mb-16">
+          <div className="border-b border-gray-200 mb-8">
+            <nav className="flex gap-8">
               <button
-                onClick={decreaseQuantity}
-                className="bg-gray-100 hover:bg-gray-200 w-10 h-10 rounded-l-lg flex items-center justify-center transition-colors"
-                disabled={quantity <= 1}
+                onClick={() => setActiveTab("description")}
+                className={`py-3 px-1 font-medium text-lg transition-colors relative ${
+                  activeTab === "description"
+                    ? "text-white bg-green-600 px-6 rounded-lg"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
-                -
+                Description
               </button>
-              <div className="bg-gray-100 w-16 h-10 flex items-center justify-center">
-                {quantity}
-              </div>
               <button
-                onClick={increaseQuantity}
-                className="bg-gray-100 hover:bg-gray-200 w-10 h-10 rounded-r-lg flex items-center justify-center transition-colors"
-                disabled={quantity >= product.stock}
+                onClick={() => setActiveTab("reviews")}
+                className={`py-3 px-1 font-medium text-lg transition-colors ${
+                  activeTab === "reviews"
+                    ? "text-white bg-green-600 px-6 rounded-lg"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
-                +
+                Reviews (1)
               </button>
-              <span className="ml-3 text-gray-600">kg</span>
-            </div>
+            </nav>
           </div>
 
-          <div className="flex flex-wrap gap-4 mb-12">
-            <button
-              onClick={handleToggleFavorite}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                isFavorite
-                  ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-gray-100 hover:bg-gray-200 text-black"
-              }`}
-            >
-              {isFavorite ? <FaHeart /> : <FaRegHeart />}
-              {isFavorite ? "Remove from favorites" : "Add to favorites"}
-            </button>
-
-            <button
-              onClick={handleAddToCart}
-              className="flex items-center gap-2 bg-green hover:bg-green/90 text-white px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={product.stock === 0}
-            >
-              <FaShoppingCart />
-              {product.stock === 0 ? "Out of Stock" : "Add to cart"}
-            </button>
-          </div>
-
-          {/* Description/Reviews Tabs */}
           <div>
-            <div className="border-b border-gray-200 mb-6">
-              <nav className="flex space-x-8">
-                <button
-                  onClick={() => setActiveTab("description")}
-                  className={`py-3 px-1 border-b-2 font-medium text-lg ${
-                    activeTab === "description"
-                      ? "border-green text-green"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  Description
-                </button>
-                <button
-                  onClick={() => setActiveTab("reviews")}
-                  className={`py-3 px-1 border-b-2 font-medium text-lg ${
-                    activeTab === "reviews"
-                      ? "border-green text-green"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  Reviews ({reviews.length})
-                </button>
-              </nav>
-            </div>
+            {activeTab === "description" ? (
+              <div className="space-y-6">
+                {/* Author tag */}
+                <div className="flex justify-end">
+                  <span className="bg-yellow-400 text-black px-3 py-1 rounded text-sm font-medium">
+                    Arman Khan
+                  </span>
+                </div>
 
-            <div>
-              {activeTab === "description" ? (
                 <div className="prose max-w-none">
-                  {product.description.split("\n").map(
-                    (paragraph, index) =>
-                      paragraph.trim() && (
-                        <p
-                          key={index}
-                          className="text-gray-700 mb-4 leading-relaxed"
-                        >
-                          {paragraph}
-                        </p>
-                      )
-                  )}
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    Our coconuts are sustainably grown, ensuring the best
+                    quality and taste. Each coconut is handpicked and carefully
+                    prepared, offering you the freshest product possible. Rich
+                    in healthy fats, electrolytes, and essential nutrients,
+                    coconuts provide both hydration and nourishment. Whether
+                    you're using the water, flesh, or milk, our coconuts bring
+                    versatility to your kitchen while supporting healthy living.
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    Perfect for smoothies, desserts, curries, and more — let the
+                    natural sweetness of the coconut elevate your recipes. Enjoy
+                    the tropical goodness in its purest form, directly from
+                    nature.
+                  </p>
                 </div>
-              ) : (
-                <div>
-                  {reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="border-b border-gray-200 py-6"
-                    >
-                      <div className="flex justify-between mb-2">
-                        <h4 className="font-medium text-lg">
-                          {review.userName}
-                        </h4>
-                        <span className="text-gray-500">{review.date}</span>
-                      </div>
-                      <div className="flex text-yellow-400 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < review.rating
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-gray-700">{review.comment}</p>
+              </div>
+            ) : (
+              <div>
+                {reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="border-b border-gray-200 py-6"
+                  >
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium text-lg">{review.userName}</h4>
+                      <span className="text-gray-500">{review.date}</span>
                     </div>
-                  ))}
-
-                  <div className="mt-8">
-                    <h3 className="text-xl font-medium mb-4">Add a review</h3>
-                    <form onSubmit={handleSubmitReview}>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <label
-                            htmlFor="name"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            Your Name
-                          </label>
-                          <input
-                            type="text"
-                            id="name"
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green focus:border-green"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="rating"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            Rating
-                          </label>
-                          <select
-                            id="rating"
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green focus:border-green"
-                          >
-                            <option value="5">5 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="2">2 Stars</option>
-                            <option value="1">1 Star</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="mb-6">
-                        <label
-                          htmlFor="review"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Your Review
-                        </label>
-                        <textarea
-                          id="review"
-                          rows={4}
-                          required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green focus:border-green"
-                          placeholder="Share your thoughts about this product..."
+                    <div className="flex text-yellow-400 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating ? "fill-current" : "text-gray-300"
+                          }`}
                         />
-                      </div>
-                      <button
-                        type="submit"
-                        className="bg-green hover:bg-green/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                      >
-                        Submit Review
-                      </button>
-                    </form>
+                      ))}
+                    </div>
+                    <p className="text-gray-700">{review.comment}</p>
                   </div>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Related Products Section */}
+        <div className="text-center mb-12">
+          <p className="text-green-600 font-medium mb-2">Our Products</p>
+          <h2 className="text-3xl font-bold text-gray-900">Related products</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {relatedProducts.map((relatedProduct) => (
+            <div
+              key={relatedProduct.id}
+              className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="aspect-square bg-gray-100 rounded-xl mb-4 overflow-hidden relative">
+                <Image
+                  src={relatedProduct.image}
+                  alt={relatedProduct.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                {relatedProduct.name}
+              </h3>
+              <p className="text-gray-600 text-lg mb-4">
+                ${relatedProduct.price}/kg
+              </p>
+              <button className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                Add to cart
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
