@@ -111,13 +111,13 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Product Gallery */}
-          <div className="bg-white rounded-2xl p-8 shadow-sm">
+          <div className=" border border-[#0000001A] rounded-xl p-8 shadow-sm">
             <div className="relative">
               {/* Main product image */}
-              <div className="aspect-square mb-4 bg-gray-100 rounded-xl overflow-hidden relative">
+              <div className="aspect-square mb-4 rounded-xl overflow-hidden relative">
                 <Image
                   src={product.images[0] || "/images/coconut.jpg"}
                   alt={product.productName}
@@ -125,10 +125,6 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                   className="object-cover"
                   priority
                 />
-                {/* Blue circle with number - positioned like in image */}
-                <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                  0
-                </div>
               </div>
 
               {/* Thumbnail dots indicator */}
@@ -146,53 +142,47 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
           </div>
 
           {/* Product Details */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Category Tag */}
             <div>
-              <span className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+              <h6 className="text-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
                 {product.category || "Fruits"}
-              </span>
+              </h6>
             </div>
 
             {/* Product Name */}
-            <h1 className="text-4xl font-bold text-gray-900">
+            <h2 className="text-black font-heading text-5xl font-medium">
               {product.productName}
-            </h1>
+            </h2>
 
             {/* Rating */}
             <div className="flex items-center gap-2">
-              <div className="flex text-yellow-400">
+              <div className="flex text-yellow-400 gap-2">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-current" />
                 ))}
               </div>
-              <span className="text-gray-600 font-medium">5.0 (1 review)</span>
+              <h6 className="text-black font-heading text-lg font-medium">
+                5.0 <span className="text-xs">(1 review)</span>
+              </h6>
             </div>
 
             {/* Price */}
-            <div className="text-3xl font-bold text-orange-500">
+            <div className="text-3xl font-heading font-semibold text-primary">
               ${product.price}/kg
             </div>
 
-            {/* Yellow highlighted description box */}
-            <div className="bg-yellow-100 border-2 border-yellow-200 rounded-lg p-4">
-              <p className="text-gray-800 leading-relaxed">
-                From our farm directly to your door, our fresh coconuts are
-                harvested at the peak of ripeness, offering you a sweet,
-                hydrating treat full of flavor. Packed with natural nutrients,
-                coconut is perfect for a variety of culinary uses, from
-                smoothies to savory dishes, or even for a refreshing drink
-                straight from the shell.
-              </p>
-            </div>
+            <p className="text-grey100 text-lg leading-relaxed pb-20">
+              {product.description}
+            </p>
 
             {/* Quantity Selector */}
-            <div className="space-y-3">
-              <label className="text-lg font-medium text-gray-900">
+            <div className="space-y-3 flex items-center gap-2 pb-10">
+              <label className="text-lg font-heading font-medium text-black">
                 Quantity
               </label>
               <div className="flex items-center gap-4">
-                <div className="flex items-center border border-gray-300 rounded-lg">
+                <div className="flex items-center border border-[#D9D9D9] rounded">
                   <button
                     onClick={decreaseQuantity}
                     className="p-3 hover:bg-gray-50 transition-colors"
@@ -200,7 +190,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="px-6 py-3 font-medium text-lg min-w-[60px] text-center">
+                  <span className="px-6 py-3 text-black border-r border-l border-[#D9D9D9]  font-heading font-medium text-lg min-w-[60px] text-center">
                     {quantity}
                   </span>
                   <button
@@ -219,21 +209,23 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
             <div className="flex gap-4">
               <button
                 onClick={handleToggleFavorite}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 justify-center ${
+                className={`flex items-center gap-2.5 text-grey100 font-heading text-lg px-8 py-4 rounded-lg font-semibold transition-colors flex-1 justify-center ${
                   isFavorite
-                    ? "bg-red-500 text-white hover:bg-red-600"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-primary text-white hover:bg-primary"
+                    : "bg-grey20 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 <Heart
-                  className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`}
+                  className={`w-5 h-5 text-[#D9D9D9] ${
+                    isFavorite ? "fill-current" : ""
+                  }`}
                 />
                 Save as favorite
               </button>
 
               <button
                 onClick={handleAddToCart}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-medium transition-colors flex-1 justify-center"
+                className="flex items-center gap-2.5 bg-primary hover:bg-orange-600 font-heading text-lg px-8 py-4 text-white rounded-lg font-semibold transition-colors flex-1 justify-center"
                 disabled={product.stock === 0}
               >
                 <ShoppingCart className="w-5 h-5" />
@@ -244,44 +236,35 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
         </div>
 
         {/* Description/Reviews Tabs */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm mb-16">
-          <div className="border-b border-gray-200 mb-8">
-            <nav className="flex gap-8">
-              <button
-                onClick={() => setActiveTab("description")}
-                className={`py-3 px-1 font-medium text-lg transition-colors relative ${
-                  activeTab === "description"
-                    ? "text-white bg-green-600 px-6 rounded-lg"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Description
-              </button>
-              <button
-                onClick={() => setActiveTab("reviews")}
-                className={`py-3 px-1 font-medium text-lg transition-colors ${
-                  activeTab === "reviews"
-                    ? "text-white bg-green-600 px-6 rounded-lg"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Reviews (1)
-              </button>
-            </nav>
-          </div>
+        <div className="p-8 mb-16">
+          <nav className="flex gap-8">
+            <button
+              onClick={() => setActiveTab("description")}
+              className={`py-3 px-6 rounded-xl border font-heading font-medium text-lg transition-colors relative ${
+                activeTab === "description"
+                  ? "text-white bg-green border-green"
+                  : "text-[#A6A6A6] border-grey80 "
+              }`}
+            >
+              Description
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`py-3 px-6 rounded-xl border font-heading font-medium text-lg transition-colors relative ${
+                activeTab === "reviews"
+                  ? "text-white bg-green border-green"
+                  : "text-[#A6A6A6] border-grey80 "
+              }`}
+            >
+              Reviews (1)
+            </button>
+          </nav>
 
-          <div>
+          <div className="bg-grey20 px-10 py-8 rounded-3xl mt-6 max-w-full lg:max-w-4xl">
             {activeTab === "description" ? (
               <div className="space-y-6">
-                {/* Author tag */}
-                <div className="flex justify-end">
-                  <span className="bg-yellow-400 text-black px-3 py-1 rounded text-sm font-medium">
-                    Arman Khan
-                  </span>
-                </div>
-
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed mb-4">
+                  <p className="text-grey100 text-lg font-body leading-relaxed mb-4">
                     Our coconuts are sustainably grown, ensuring the best
                     quality and taste. Each coconut is handpicked and carefully
                     prepared, offering you the freshest product possible. Rich
@@ -290,7 +273,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                     you're using the water, flesh, or milk, our coconuts bring
                     versatility to your kitchen while supporting healthy living.
                   </p>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-grey100 text-lg font-body leading-relaxed">
                     Perfect for smoothies, desserts, curries, and more — let the
                     natural sweetness of the coconut elevate your recipes. Enjoy
                     the tropical goodness in its purest form, directly from
@@ -328,12 +311,16 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
         </div>
 
         {/* Related Products Section */}
-        <div className="text-center mb-12">
-          <p className="text-green-600 font-medium mb-2">Our Products</p>
-          <h2 className="text-3xl font-bold text-gray-900">Related products</h2>
+        <div className="text-center mb-12 space-y-4">
+          <h6 className="ext-green font-heading text-lg font-medium bg-[#749B3F1A] px-3 py-1 rounded-lg inline-block">
+            Our Products
+          </h6>
+          <h2 className="text-black font-heading text-5xl font-medium">
+            Related products
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-48">
           {relatedProducts.map((relatedProduct) => (
             <div
               key={relatedProduct.id}
